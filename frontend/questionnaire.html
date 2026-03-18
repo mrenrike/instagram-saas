@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conte sobre sua conta — Instagram Analytics</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>Conte um pouco sobre você</h1>
+    <p>Essas informações personalizam seu relatório.</p>
+
+    <form id="form">
+      <label>Nome completo *</label>
+      <input type="text" name="name" required>
+
+      <label>E-mail (para receber o relatório) *</label>
+      <input type="email" name="email" required>
+
+      <label>Nicho principal *</label>
+      <select name="niche" required>
+        <option value="">Selecione...</option>
+        <option>Entretenimento</option><option>Moda</option><option>Fitness</option>
+        <option>Gastronomia</option><option>Negócios</option><option>Educação</option><option>Outro</option>
+      </select>
+
+      <label>Objetivo principal *</label>
+      <select name="goal" required>
+        <option value="">Selecione...</option>
+        <option>Crescer seguidores</option><option>Aumentar engajamento</option><option>Vender pelo Instagram</option>
+      </select>
+
+      <label>Público-alvo (descreva quem você quer atingir) *</label>
+      <input type="text" name="audience" required placeholder="Ex: mulheres 25-35 interessadas em fitness">
+
+      <label>Tom de voz *</label>
+      <select name="tone" required>
+        <option value="">Selecione...</option>
+        <option>Descontraído</option><option>Profissional</option>
+        <option>Inspiracional</option><option>Educativo</option>
+      </select>
+
+      <label>Como você gerencia sua conta? *</label>
+      <select name="management_style" required>
+        <option value="">Selecione...</option>
+        <option value="solo">Gerencio sozinho</option>
+        <option value="team">Tenho equipe interna</option>
+        <option value="seeking_agency">Estou buscando uma agência</option>
+        <option value="has_agency">Já trabalho com agência</option>
+      </select>
+
+      <label>Concorrentes principais (opcional, até 3 separados por vírgula)</label>
+      <input type="text" name="competitors" placeholder="@concorrente1, @concorrente2">
+
+      <label>Contexto adicional (opcional)</label>
+      <textarea name="extra_context" rows="3" placeholder="Ex: lançamos um produto novo em abril"></textarea>
+
+      <label>Cupom de desconto (opcional)</label>
+      <input type="text" name="coupon_code" placeholder="TESTER10" style="text-transform:uppercase">
+      <div id="coupon-msg" class="error-msg" style="display:none"></div>
+
+      <div id="error-msg" class="error-msg" style="display:none;margin-top:12px"></div>
+      <button type="submit" class="btn" style="margin-top:24px" id="submit-btn">
+        Continuar para o pagamento →
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/flow.js"></script>
+<script>
+const sessionId = getSessionId();
+if (!sessionId) window.location.href = '/';
+
+document.getElementById('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const fd = new FormData(e.target);
+  const competitors = (fd.get('competitors') || '').split(',').map(s => s.trim()).filter(Boolean);
+
+  const body = {
+    name: fd.get('name'),
+    email: fd.get('email'),
+    niche: fd.get('niche'),
+    goal: fd.get('goal'),
+    audience: fd.get('audience'),
+    tone: fd.get('tone'),
+    management_style: fd.get('management_style'),
+    competitors,
+    extra_context: fd.get('extra_context') || '',
+    coupon_code: fd.get('coupon_code') || null,
+  };
+
+  try {
+    const resp = await fetch(`${BACKEND}/questionnaire/${sessionId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      document.getElementById('error-msg').textContent = data.detail || 'Erro ao enviar.';
+      document.getElementById('error-msg').style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Continuar para o pagamento →';
+      return;
+    }
+    window.location.href = `/checkout.html?session_id=${sessionId}`;
+  } catch {
+    document.getElementById('error-msg').textContent = 'Erro de conexão. Tente novamente.';
+    document.getElementById('error-msg').style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Continuar para o pagamento →';
+  }
+});
+</script>
+</body>
+</html>
