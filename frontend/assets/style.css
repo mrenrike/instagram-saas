@@ -1,0 +1,28 @@
+/* frontend/assets/style.css */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --indigo: #6366f1; --indigo-dark: #4338ca; --green: #22c55e;
+  --bg: #0f0f17; --card: rgba(255,255,255,0.05); --border: rgba(255,255,255,0.08);
+  --text: #f1f5f9; --muted: rgba(255,255,255,0.55);
+}
+body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; min-height: 100vh; }
+.container { max-width: 600px; margin: 0 auto; padding: 32px 16px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; }
+.btn { display: inline-block; background: var(--indigo); color: #fff; padding: 14px 28px;
+  border-radius: 10px; font-weight: 700; font-size: 1rem; cursor: pointer;
+  border: none; text-decoration: none; transition: opacity 0.2s; width: 100%; text-align: center; }
+.btn:hover { opacity: 0.85; }
+.btn-outline { background: transparent; border: 1px solid var(--indigo); color: var(--indigo); }
+input, select, textarea { width: 100%; padding: 12px 14px; border-radius: 8px;
+  border: 1px solid var(--border); background: rgba(255,255,255,0.07);
+  color: var(--text); font-size: 0.95rem; margin-top: 4px; }
+label { font-size: 0.9rem; color: var(--muted); display: block; margin-top: 16px; }
+.error-msg { color: #f87171; font-size: 0.85rem; margin-top: 6px; }
+.progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin: 16px 0; }
+.progress-fill { height: 100%; background: var(--indigo); border-radius: 3px; transition: width 0.4s; }
+.step-label { font-size: 0.82rem; color: var(--muted); }
+h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 16px; }
+p { color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
+.price { font-size: 2.5rem; font-weight: 800; color: var(--green); }
+.highlight { color: var(--indigo); }
