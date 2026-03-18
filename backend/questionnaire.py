@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 
 from .session import load_session, save_session, SessionNotFound, Questionnaire
@@ -11,7 +11,7 @@ router = APIRouter()
 
 class QuestionnaireRequest(BaseModel):
     name: str
-    email: str
+    email: EmailStr
     niche: str
     goal: str
     audience: str
