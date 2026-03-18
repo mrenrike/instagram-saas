@@ -1,2 +1,3 @@
 .worktrees/
 backend/coupons.json
+frontend/assets/config.js
