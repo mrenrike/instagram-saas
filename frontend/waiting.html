@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerando seu relatório...</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="container" style="text-align:center;padding-top:64px">
+  <div style="font-size:3rem;margin-bottom:16px">⏳</div>
+  <h1>Seu relatório está sendo gerado</h1>
+  <p>Você receberá um e-mail em breve. Pode levar até 5 minutos.</p>
+
+  <div style="margin:32px 0">
+    <div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+    <div class="step-label" id="step-label">Iniciando...</div>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/flow.js"></script>
+<script>
+const sessionId = getSessionId();
+const steps = ['Coletando dados', 'Calculando métricas', 'Analisando com IA', 'Gerando relatório', 'Enviando e-mail'];
+const stepPercent = [20, 40, 60, 80, 100];
+
+poll({
+  url: `${BACKEND}/pipeline/status/${sessionId}`,
+  intervalMs: 5000,
+  maxMs: 600000,
+  condition: d => d.status === 'done' || d.status === 'error',
+  onResult: d => {
+    const step = Math.max(0, Math.min(d.step - 1, steps.length - 1));
+    if (d.step > 0) {
+      document.getElementById('progress').style.width = stepPercent[step] + '%';
+      document.getElementById('step-label').textContent = steps[step] + '...';
+    }
+  },
+  onDone: d => {
+    if (d.status === 'done') {
+      window.location.href = `/success.html?session_id=${sessionId}`;
+    } else {
+      window.location.href = `/error.html?session_id=${sessionId}&error=${encodeURIComponent(d.error || '')}`;
+    }
+  },
+  onTimeout: () => { window.location.href = `/error.html?session_id=${sessionId}&error=timeout`; },
+});
+</script>
+</body>
+</html>

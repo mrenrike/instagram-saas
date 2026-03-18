@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ops... algo deu errado</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="container" style="text-align:center;padding-top:64px">
+  <div style="font-size:3rem;margin-bottom:16px">😔</div>
+  <h1>Algo deu errado</h1>
+  <p id="error-detail"></p>
+  <p>Nossa equipe já foi notificada. Você <strong>não será cobrado novamente</strong>.<br>
+  Entre em contato para reagendarmos gratuitamente.</p>
+  <a id="contact-link" href="#" class="btn" style="margin-top:24px;display:inline-block;width:auto;padding:14px 28px">
+    Entrar em contato
+  </a>
+</div>
+<script>
+  window.APP_CONFIG = window.APP_CONFIG || {};
+</script>
+<script src="assets/config.js"></script>
+<script src="assets/flow.js"></script>
+<script>
+  const agencyEmail = window.APP_CONFIG.AGENCY_EMAIL || 'contato@agencia.com.br';
+  document.getElementById('contact-link').href = 'mailto:' + agencyEmail;
+
+  const params = new URLSearchParams(window.location.search);
+  const reason = params.get('reason') || params.get('error') || '';
+  const msgs = {
+    personal_account: 'Sua conta Instagram é pessoal. O produto requer conta Business ou Creator.',
+    oauth_denied: 'A conexão com o Instagram foi cancelada.',
+    token_expired: 'Seu token de acesso Instagram expirou.',
+    timeout: 'O processamento demorou mais que o esperado.',
+  };
+  document.getElementById('error-detail').textContent = msgs[reason] || 'Erro técnico no processamento.';
+</script>
+</body>
+</html>

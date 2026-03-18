@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pagamento — Instagram Analytics</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="container">
+  <div class="card" style="text-align:center">
+    <h1>Pagamento via Pix</h1>
+    <p>Escaneie o QR Code abaixo com o app do seu banco.</p>
+    <div id="loading" style="padding:40px;color:var(--muted)">Gerando QR Code...</div>
+    <div id="qr-block" style="display:none">
+      <img id="qr-img" src="" alt="QR Code Pix" style="max-width:220px;border-radius:12px;margin:16px auto;display:block">
+      <p id="price-label" style="font-size:1.5rem;font-weight:800;color:var(--green)"></p>
+      <p style="font-size:0.85rem">Expira em <span id="timer">15:00</span></p>
+      <p style="font-size:0.8rem;margin-top:8px">Pix copia e cola:</p>
+      <textarea id="br-code" readonly style="font-size:0.72rem;height:60px"></textarea>
+    </div>
+    <div id="expired-msg" style="display:none;color:#f87171">QR Code expirado. <a href="javascript:location.reload()">Gerar novo</a></div>
+  </div>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/flow.js"></script>
+<script>
+const sessionId = getSessionId();
+if (!sessionId) window.location.href = '/';
+
+(async () => {
+  const resp = await fetch(`${BACKEND}/checkout/${sessionId}`, { method: 'POST' });
+  const data = await resp.json();
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('qr-block').style.display = 'block';
+  document.getElementById('qr-img').src = data.qr_code_image || '';
+  document.getElementById('br-code').value = data.br_code || '';
+  document.getElementById('price-label').textContent = `R$${(data.amount / 100).toFixed(2).replace('.', ',')}`;
+
+  // Timer countdown
+  let remaining = data.expires_in || 900;
+  const timerEl = document.getElementById('timer');
+  const interval = setInterval(() => {
+    remaining--;
+    const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+    const s = (remaining % 60).toString().padStart(2, '0');
+    timerEl.textContent = `${m}:${s}`;
+    if (remaining <= 0) { clearInterval(interval); document.getElementById('qr-block').style.display='none'; document.getElementById('expired-msg').style.display='block'; }
+  }, 1000);
+
+  // Poll payment status
+  await poll({
+    url: `${BACKEND}/checkout/status/${sessionId}`,
+    intervalMs: 3000,
+    maxMs: 900000,
+    condition: d => d.payment_status === 'paid',
+    onDone: () => { clearInterval(interval); window.location.href = `/waiting.html?session_id=${sessionId}`; },
+    onTimeout: () => { clearInterval(interval); document.getElementById('qr-block').style.display='none'; document.getElementById('expired-msg').style.display='block'; },
+  });
+})();
+</script>
+</body>
+</html>
