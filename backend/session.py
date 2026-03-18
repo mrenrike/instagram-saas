@@ -1,7 +1,6 @@
 import os
 import json
 import uuid
-import hashlib
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -19,12 +18,7 @@ class SessionNotFound(Exception):
 
 
 def _key() -> bytes:
-    raw = get_config().SESSION_ENCRYPTION_KEY
-    # Normalise to 32 bytes so AESGCM-256 always receives a valid key,
-    # regardless of the raw decoded length.
-    if len(raw) == 16 or len(raw) == 24 or len(raw) == 32:
-        return raw
-    return hashlib.sha256(raw).digest()
+    return get_config().SESSION_ENCRYPTION_KEY
 
 
 def _encrypt(data: bytes) -> bytes:

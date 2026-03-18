@@ -3,7 +3,7 @@ import os, json
 from pathlib import Path
 from unittest.mock import patch
 
-os.environ.setdefault("SESSION_ENCRYPTION_KEY", "dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleT0=")
+os.environ.setdefault("SESSION_ENCRYPTION_KEY", "dGVzdGtleS10ZXN0a2V5LXRlc3RrZXkh")
 os.environ.setdefault("SESSIONS_DIR", "/tmp/test_sessions")
 for k in ["OPENPIX_APP_ID","OPENPIX_WEBHOOK_SECRET","META_APP_ID","META_APP_SECRET",
           "META_REDIRECT_URI","ANTHROPIC_API_KEY","RESEND_API_KEY","ADMIN_EMAIL",
