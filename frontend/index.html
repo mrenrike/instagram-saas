@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instagram Analytics — Relatório Completo por R$67</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="container">
+  <div style="text-align:center;padding:48px 0 32px">
+    <div style="font-size:3rem;margin-bottom:16px">📊</div>
+    <h1>Descubra o que <span class="highlight">realmente</span> funciona no seu Instagram</h1>
+    <p>Relatório completo gerado por IA com base nos seus últimos 60 posts. Estratégia, calendário 30 dias e roteiros prontos.</p>
+    <div class="price" style="margin:24px 0">R$67</div>
+    <p style="font-size:0.85rem">✅ Pagamento único via Pix &nbsp;|&nbsp; ✅ Entrega em ~2–4 minutos</p>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <h2>O que você recebe</h2>
+    <ul style="color:var(--muted);line-height:2;padding-left:20px">
+      <li>Diagnóstico geral da sua conta</li>
+      <li>Análise por formato (Reels, Foto, Carrossel, Vídeo)</li>
+      <li>Top 5 posts + por que viralizaram</li>
+      <li>Melhores horários e dias para postar (horário BRT)</li>
+      <li>Calendário dia a dia — 30 dias</li>
+      <li>5 roteiros prontos para usar</li>
+      <li>Hashtag strategy completa</li>
+      <li>3 quick wins para hoje</li>
+    </ul>
+  </div>
+
+  <div style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);border-radius:10px;padding:14px 18px;margin-bottom:24px;font-size:0.9rem;color:#fbbf24">
+    ⚠️ <strong>Requer conta Instagram Business ou Creator.</strong> Contas pessoais não têm acesso à API de insights e não são compatíveis.
+  </div>
+
+  <a id="cta-btn" href="#" class="btn" style="font-size:1.1rem;padding:18px">
+    Analisar minha conta agora →
+  </a>
+  <p style="text-align:center;font-size:0.8rem;margin-top:12px">Você será redirecionado para conectar seu Instagram de forma segura.</p>
+</div>
+
+<script src="assets/config.js"></script>
+<script src="assets/flow.js"></script>
+<script>
+  const utms = getUTMs();
+  const params = new URLSearchParams(utms);
+  document.getElementById('cta-btn').href = `${BACKEND}/oauth/start?${params}`;
+</script>
+</body>
+</html>
