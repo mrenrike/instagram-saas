@@ -1,0 +1,26 @@
+# Configuração do gitleaks (itens 1, 2).
+[extend]
+useDefault = true
+
+[[rules]]
+id = "openpix-app-id"
+description = "OpenPix AppID"
+regex = '''(?i)openpix[_-]?app[_-]?id["'\s:=]+[A-Za-z0-9+/=]{40,}'''
+
+[[rules]]
+id = "meta-access-token"
+description = "Meta/Facebook Graph API access token"
+regex = '''EAA[A-Za-z0-9]{40,}'''
+
+[allowlist]
+description = "Fixtures de teste — chaves falsas, não segredos reais"
+paths = [
+  '''backend/tests/.*''',
+  '''.*\.example$''',
+  '''.*\.example\..*''',
+]
+regexes = [
+  # A chave RSA de fixture nos testes de CRM tem corpo "MIIEow==" — 8 caracteres,
+  # não é uma chave utilizável.
+  '''-----BEGIN RSA PRIVATE KEY-----\\nMIIEow==''',
+]

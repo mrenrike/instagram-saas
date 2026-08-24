@@ -1,0 +1,51 @@
+# frontend/.htaccess — Apache/Hostinger configuration for the static frontend.
+#
+# The <meta http-equiv="Content-Security-Policy"> tags in the pages are a fallback for
+# hosts where this file is not honoured. Real headers set here take precedence and can
+# express things a meta tag cannot (HSTS, X-Frame-Options, frame-ancestors).
+#
+# EDIT BEFORE DEPLOY: replace https://SEU-BACKEND.railway.app in the connect-src
+# directive below with the API origin from assets/config.js.
+
+# ---- Item 19: force HTTPS ----------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Hostinger terminates TLS at the proxy, so %{HTTPS} is often "off" even on a secure
+  # request; X-Forwarded-Proto is the reliable signal.
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+</IfModule>
+
+# ---- Item 18: security headers ----------------------------------------------
+<IfModule mod_headers.c>
+  # Two years, subdomains included. Only add "preload" once you are certain every
+  # subdomain can serve HTTPS forever — the preload list is hard to leave.
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+
+  Header always set Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://SEU-BACKEND.railway.app; form-action 'none'; base-uri 'none'; frame-ancestors 'none'; upgrade-insecure-requests"
+
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+
+  # Item 1 — the deployment config is not a secret, but it should not be cached
+  # across a config change either.
+  <FilesMatch "config\.js$">
+    Header set Cache-Control "no-store"
+  </FilesMatch>
+</IfModule>
+
+# ---- Item 17: do not advertise the stack or list directories ----------------
+ServerSignature Off
+Options -Indexes
+
+# ---- Item 1/2: never serve dotfiles, backups or env files -------------------
+<FilesMatch "^\.|\.(env|bak|old|orig|log|sql|yml|yaml|ini|json\.enc)$">
+  Require all denied
+</FilesMatch>
+<Files ".htaccess">
+  Require all denied
+</Files>

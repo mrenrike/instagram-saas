@@ -4,9 +4,9 @@ Instagram Graph API data collection.
 Fetches last 60 posts (no stories) with insights.
 All timestamps converted to BRT (UTC-3).
 """
+from datetime import datetime, timedelta, timezone
+
 import httpx
-from datetime import datetime, timezone, timedelta
-from typing import Optional
 
 BRT = timezone(timedelta(hours=-3))
 BASE_URL = "https://graph.instagram.com/v21.0"

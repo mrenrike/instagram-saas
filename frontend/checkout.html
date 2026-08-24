@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https:; form-action 'none'; base-uri 'none'; frame-ancestors 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pagamento — Instagram Analytics</title>
 <link rel="stylesheet" href="assets/style.css">
@@ -19,47 +21,14 @@
       <p style="font-size:0.8rem;margin-top:8px">Pix copia e cola:</p>
       <textarea id="br-code" readonly style="font-size:0.72rem;height:60px"></textarea>
     </div>
-    <div id="expired-msg" style="display:none;color:#f87171">QR Code expirado. <a href="javascript:location.reload()">Gerar novo</a></div>
+    <div id="expired-msg" style="display:none;color:#f87171">QR Code expirado.
+      <button type="button" id="reload-btn" class="btn" style="width:auto;padding:8px 16px;margin-left:8px">Gerar novo</button>
+    </div>
   </div>
 </div>
 
 <script src="assets/config.js"></script>
 <script src="assets/flow.js"></script>
-<script>
-const sessionId = getSessionId();
-if (!sessionId) window.location.href = '/';
-
-(async () => {
-  const resp = await fetch(`${BACKEND}/checkout/${sessionId}`, { method: 'POST' });
-  const data = await resp.json();
-
-  document.getElementById('loading').style.display = 'none';
-  document.getElementById('qr-block').style.display = 'block';
-  document.getElementById('qr-img').src = data.qr_code_image || '';
-  document.getElementById('br-code').value = data.br_code || '';
-  document.getElementById('price-label').textContent = `R$${(data.amount / 100).toFixed(2).replace('.', ',')}`;
-
-  // Timer countdown
-  let remaining = data.expires_in || 900;
-  const timerEl = document.getElementById('timer');
-  const interval = setInterval(() => {
-    remaining--;
-    const m = Math.floor(remaining / 60).toString().padStart(2, '0');
-    const s = (remaining % 60).toString().padStart(2, '0');
-    timerEl.textContent = `${m}:${s}`;
-    if (remaining <= 0) { clearInterval(interval); document.getElementById('qr-block').style.display='none'; document.getElementById('expired-msg').style.display='block'; }
-  }, 1000);
-
-  // Poll payment status
-  await poll({
-    url: `${BACKEND}/checkout/status/${sessionId}`,
-    intervalMs: 3000,
-    maxMs: 900000,
-    condition: d => d.payment_status === 'paid',
-    onDone: () => { clearInterval(interval); window.location.href = `/waiting.html?session_id=${sessionId}`; },
-    onTimeout: () => { clearInterval(interval); document.getElementById('qr-block').style.display='none'; document.getElementById('expired-msg').style.display='block'; },
-  });
-})();
-</script>
+<script src="assets/page-checkout.js"></script>
 </body>
 </html>

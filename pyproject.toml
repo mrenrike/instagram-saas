@@ -1,0 +1,26 @@
+[tool.bandit]
+# Os testes usam assert (B101) e binds em 0.0.0.0 não se aplicam aqui.
+exclude_dirs = ["backend/tests", ".venv", "venv"]
+skips = ["B101"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["backend/tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "S", "UP"]
+# S101 assert, S105/S106 "hardcoded password" em nomes de variáveis de config.
+ignore = ["S101", "S105", "S106", "E501"]
+
+# B008: `Depends(...)` in an argument default is the documented FastAPI idiom.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Header", "fastapi.Path", "fastapi.Query", "fastapi.Body"]
+
+[tool.ruff.lint.per-file-ignores]
+"backend/tests/*" = ["S", "B"]

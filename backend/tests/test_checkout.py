@@ -1,58 +1,84 @@
-# backend/tests/test_checkout.py
-import pytest
-import os
-from unittest.mock import AsyncMock, patch, MagicMock
-
-for k, v in {
-    "SESSION_ENCRYPTION_KEY": "dGVzdGtleS10ZXN0a2V5LXRlc3RrZXkh",
-    "SESSIONS_DIR": "/tmp/test_sessions_co",
-    "OPENPIX_APP_ID": "test_app_id",
-    "OPENPIX_WEBHOOK_SECRET": "secret",
-    "META_APP_ID": "x", "META_APP_SECRET": "x", "META_REDIRECT_URI": "x",
-    "ANTHROPIC_API_KEY": "x", "RESEND_API_KEY": "x",
-    "ADMIN_EMAIL": "a@b.com", "ADMIN_SECRET": "x",
-    "GOOGLE_SHEETS_ID": "x", "GOOGLE_SERVICE_ACCOUNT_JSON": '{"type":"service_account"}',
-}.items():
-    os.environ.setdefault(k, v)
-
-from backend.session import Session, save_session
+from unittest.mock import AsyncMock, MagicMock, patch
 
 
-def make_session(tmp_path):
-    with patch("backend.session.SESSIONS_DIR", str(tmp_path)):
-        s = Session.new("@test", "BUSINESS", "token123")
-        s.name = "Test User"
-        s.email = "test@example.com"
-        s.questionnaire.niche = "Fitness"
-        save_session(s)
-        return s
-
-
-def test_checkout_creates_openpix_charge(tmp_path):
-    s = make_session(tmp_path)
-    mock_resp = MagicMock()
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = {
-        "charge": {
-            "correlationID": s.session_id,
-            "brCode": "00020126...",
-            "globalID": "charge_abc",
-        }
+def _charge_response(session_id):
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.json.return_value = {
+        "charge": {"correlationID": session_id, "brCode": "00020126...", "globalID": "charge_abc"}
     }
-    with patch("backend.session.SESSIONS_DIR", str(tmp_path)), \
-         patch("httpx.AsyncClient") as mock_client:
-        mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_resp)
-        import asyncio
-        from backend.checkout import create_checkout
-        result = asyncio.run(create_checkout(s.session_id))
-        assert "br_code" in result
-        assert result["amount"] == 6700  # default price
+    return resp
 
 
-def test_checkout_status_returns_pending(tmp_path):
-    s = make_session(tmp_path)
-    with patch("backend.session.SESSIONS_DIR", str(tmp_path)):
-        import asyncio
-        from backend.checkout import get_checkout_status
-        result = asyncio.run(get_checkout_status(s.session_id))
-        assert result["payment_status"] == "pending"
+def test_checkout_creates_openpix_charge(client, new_session, auth_headers):
+    session, token = new_session(name="Test User", email="test@example.com")
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_client.return_value.__aenter__.return_value.post = AsyncMock(
+            return_value=_charge_response(session.session_id)
+        )
+        resp = client.post(f"/checkout/{session.session_id}", headers=auth_headers(token))
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["br_code"] == "00020126..."
+    assert body["amount"] == 6700  # default price, decided server-side
+
+
+def test_checkout_status_returns_pending(client, new_session, auth_headers):
+    session, token = new_session(name="Test User", email="test@example.com")
+    resp = client.get(f"/checkout/status/{session.session_id}", headers=auth_headers(token))
+    assert resp.status_code == 200
+    assert resp.json() == {"payment_status": "pending"}
+
+
+# --- Item 7 -------------------------------------------------------------------
+def test_checkout_rejects_foreign_token(client, new_session, auth_headers):
+    victim, _ = new_session(name="V", email="v@example.com")
+    _, attacker_token = new_session()
+
+    resp = client.post(f"/checkout/{victim.session_id}", headers=auth_headers(attacker_token))
+    assert resp.status_code == 404
+
+
+def test_checkout_status_requires_token(client, new_session):
+    session, _ = new_session(name="V", email="v@example.com")
+    assert client.get(f"/checkout/status/{session.session_id}").status_code == 404
+
+
+# --- Item 8: the client cannot set its own price ------------------------------
+def test_checkout_ignores_a_client_supplied_amount(client, new_session, auth_headers):
+    session, token = new_session(name="Test User", email="test@example.com")
+
+    with patch("httpx.AsyncClient") as mock_client:
+        post = AsyncMock(return_value=_charge_response(session.session_id))
+        mock_client.return_value.__aenter__.return_value.post = post
+        resp = client.post(
+            f"/checkout/{session.session_id}",
+            json={"value": 1, "amount": 1},
+            headers=auth_headers(token),
+        )
+
+    assert resp.status_code == 200
+    assert post.call_args.kwargs["json"]["value"] == 6700
+
+
+def test_checkout_requires_a_completed_questionnaire(client, new_session, auth_headers):
+    session, token = new_session()  # no name/email yet
+    resp = client.post(f"/checkout/{session.session_id}", headers=auth_headers(token))
+    assert resp.status_code == 400
+
+
+# --- Item 17: the provider's error body never reaches the client --------------
+def test_provider_error_is_not_echoed(client, new_session, auth_headers):
+    session, token = new_session(name="Test User", email="test@example.com")
+    failing = MagicMock()
+    failing.status_code = 401
+    failing.json.return_value = {"error": "invalid AppID sk_live_supersecret"}
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=failing)
+        resp = client.post(f"/checkout/{session.session_id}", headers=auth_headers(token))
+
+    assert resp.status_code == 502
+    assert "sk_live_supersecret" not in resp.text
