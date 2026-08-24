@@ -195,6 +195,11 @@ def _session_path(session_id: str) -> Path:
 def save_session(session: Session) -> None:
     directory = _sessions_dir()
     directory.mkdir(parents=True, exist_ok=True)
+    # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
+    # A regra sugere 0o644, que é o default para ARQUIVO. Aqui é um DIRETÓRIO:
+    # 0o700 é mais restritivo que o 0o755 usual (só o dono entra), e 0o644 sem o
+    # bit de execução tornaria o diretório inacessível. Ver o teste
+    # test_session_file_is_owner_only.
     os.chmod(directory, 0o700)
 
     path = _session_path(session.session_id)

@@ -129,9 +129,10 @@ async def oauth_callback(request: Request, code: str = "", state: str = "", erro
             },
         )
     if token_resp.status_code != 200:
-        # The response body can echo the app secret back in an error string — log the
-        # status only (item 17).
-        logger.error("Meta token exchange failed with status %s", token_resp.status_code)
+        # Only the status code is logged. The response body of a failed exchange can
+        # echo the app secret back inside an error string, so it never reaches the
+        # log (item 17).
+        logger.error("Meta OAuth code exchange failed with HTTP %s", token_resp.status_code)
         return RedirectResponse(
             _frontend_url("/error.html", reason="token_exchange_failed"), status_code=302
         )
