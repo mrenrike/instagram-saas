@@ -8,8 +8,11 @@
 name: security
 
 on:
+  # Só a branch padrão. Com `branches: ["**"]` cada push numa branch de PR
+  # disparava DUAS execuções idênticas (uma por `push`, outra por `pull_request`),
+  # com dois conjuntos de checks e resultados divergentes no gitleaks.
   push:
-    branches: ["**"]
+    branches: [feature/instagram-saas]
   pull_request:
   schedule:
     # Segunda-feira 06:00 UTC (03:00 BRT). Uma CVE nova aparece sem que ninguém
