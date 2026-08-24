@@ -207,6 +207,24 @@ CVE nova aparece sem ninguém dar push.
 
 Some análise estática do próprio código: bandit, semgrep, `ruff --select S`.
 
+Quatro detalhes que custam um ciclo de CI cada:
+
+- **`fetch-depth: 0` no checkout do gitleaks** e a permissão `pull-requests: read`.
+  Sem a permissão, a action tenta listar os commits do PR, recebe 403 e falha antes
+  de escanear qualquer coisa.
+- **Nenhum segredo literal no workflow.** Um `ADMIN_SECRET: valor-de-teste` commitado
+  é exatamente o que o gitleaks procura, e ele vai achar — no arquivo do próprio
+  scanner. Deixe a configuração de teste no `conftest.py` (coberto pela allowlist de
+  `tests/`) ou gere os valores em runtime.
+- **`push: branches: ["**"]` junto com `pull_request` dispara tudo duas vezes.**
+  Dois conjuntos de checks no PR, e resultados que divergem entre as variantes.
+  Restrinja o `push` à branch padrão.
+- **O `nosemgrep` só vale na linha do achado ou na imediatamente anterior.** Um bloco
+  de comentário entre o marcador e o código quebra a adjacência.
+
+E ao rodar essas ferramentas à mão: `cmd | tail` faz `$?` devolver o status do `tail`,
+não o da ferramenta. Um scanner que falhou ao baixar as regras parece ter passado.
+
 ---
 
 ## Ao terminar

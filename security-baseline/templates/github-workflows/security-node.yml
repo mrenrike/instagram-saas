@@ -2,14 +2,19 @@
 name: security
 
 on:
+  # Só a branch padrão. Com `branches: ["**"]` cada push numa branch de PR
+  # dispara DUAS execuções idênticas (uma por `push`, outra por `pull_request`).
   push:
-    branches: ["**"]
+    branches: [main]
   pull_request:
   schedule:
     - cron: "0 6 * * 1"
 
 permissions:
   contents: read
+  # O gitleaks-action lista os commits do PR para varrer o diff; sem esta
+  # permissão a chamada volta 403 e o job falha antes de escanear qualquer coisa.
+  pull-requests: read
 
 concurrency:
   group: security-${{ github.ref }}
