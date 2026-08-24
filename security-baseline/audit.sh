@@ -23,7 +23,8 @@ skip() { printf '  ➖ %s\n' "$1"; }
 src() {
   grep -rIn \
        --exclude-dir={.git,node_modules,.next,dist,build,venv,.venv,__pycache__,.worktrees,security-baseline} \
-       --exclude="*.min.js" --exclude="*.map" --exclude=".gitleaks.toml" "$@" . 2>/dev/null
+       --exclude="*.min.js" --exclude="*.map" --exclude=".gitleaks.toml" \
+       --exclude="SECURITY.md" --exclude="CLAUDE.md" "$@" . 2>/dev/null
 }
 
 # Igual a src(), mas também sem testes: asserções de teste comparam segredos de

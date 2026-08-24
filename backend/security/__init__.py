@@ -27,6 +27,7 @@ from .cookies import clear_session_cookie, set_session_cookie
 from .headers import SecurityHeadersMiddleware, build_csp
 from .https import HTTPSRedirectMiddleware
 from .limits import BodySizeLimitMiddleware
+from .outbound import UnsafeURL, safe_urlopen
 from .ratelimit import RateLimiter, RateLimitExceeded, client_ip, rate_limit
 from .responses import PUBLIC_ERROR_MESSAGES, public_error
 from .secrets import constant_time_compare, generate_secret, hash_secret, verify_secret
@@ -53,6 +54,8 @@ __all__ = [
     "BodySizeLimitMiddleware",
     "RateLimiter",
     "RateLimitExceeded",
+    "safe_urlopen",
+    "UnsafeURL",
     "rate_limit",
     "client_ip",
     "constant_time_compare",
