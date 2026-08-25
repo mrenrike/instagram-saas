@@ -221,6 +221,41 @@ Quatro detalhes que custam um ciclo de CI cada:
   Restrinja o `push` à branch padrão.
 - **O `nosemgrep` só vale na linha do achado ou na imediatamente anterior.** Um bloco
   de comentário entre o marcador e o código quebra a adjacência.
+- **`# nosec` depois de `f"""` cai DENTRO da string.** O texto vira a primeira linha
+  da query. Ponha o marcador na linha que fecha a string. E não escreva justificativa
+  depois do `nosec`: o bandit lê tudo o que vem depois como id de teste.
+
+### A allowlist do gitleaks é onde o scanner morre em silêncio
+
+Uma allowlist mal escrita não deixa o CI vermelho; deixa ele verde para sempre no
+lugar errado. Quatro regras, todas aprendidas apanhando:
+
+- **Dispense por commit, nunca por caminho.** Num allowlist, `paths` pula o arquivo
+  INTEIRO, em qualquer commit — dá para confirmar na contagem de bytes lidos que o
+  gitleaks imprime. Se o arquivo é código vivo, um segredo novo escrito nele amanhã
+  passa verde. `condition = "AND"` junto de `commits` não muda isso: o arquivo é
+  descartado antes de o commit ser olhado.
+- **Fixture de teste vai como valor literal, não como `paths: tests/.*`.** Excluir o
+  diretório de testes é cômodo e cega o scanner para um segredo de verdade colado
+  ali. Liste cada valor falso em `regexes`.
+- **Não redefina uma regra padrão copiando o regex dela.** Com `useDefault = true`,
+  uma regra com o mesmo `id` SUBSTITUI a de cima, e sua cópia congela no tempo.
+- **Teste a regra nos dois sentidos antes de confiar nela.** Um vazamento novo tem
+  que ficar vermelho; a árvore atual tem que ficar verde. Só um dos dois não prova
+  nada.
+
+### As regras padrão não pegam senha em arquivo
+
+`SMTP_PASS=` e `DB_PASSWORD=` não têm entropia suficiente para disparar o padrão
+genérico. Um CI só com a configuração de fábrica passa verde com a senha de e-mail
+dentro do repositório. Se o projeto tem arquivo de configuração versionado, escreva a
+regra. Dois cuidados ao escrever:
+
+- Termine o valor em `[ \t]*$`, **não** `\s*$`. Em modo multilinha o `\s` casa a
+  quebra de linha, então `SMTP_PASS=` vazio casa consumindo a linha seguinte, e todo
+  `.env.example` com campo em branco vira achado.
+- Restrinja por `path` a arquivo de configuração. Sem isso, código que só LÊ a
+  variável (`ADMIN_SECRET = cfg.ADMIN_SECRET`) casa o padrão e não é segredo nenhum.
 
 E ao rodar essas ferramentas à mão: `cmd | tail` faz `$?` devolver o status do `tail`,
 não o da ferramenta. Um scanner que falhou ao baixar as regras parece ter passado.

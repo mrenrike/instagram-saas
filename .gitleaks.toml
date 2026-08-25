@@ -13,9 +13,15 @@ description = "Meta/Facebook Graph API access token"
 regex = '''EAA[A-Za-z0-9]{40,}'''
 
 [allowlist]
-description = "Fixtures de teste — chaves falsas, não segredos reais"
+description = "Fixtures de teste — valores falsos, listados um a um"
+# Só arquivos de exemplo saem por caminho: eles existem para documentar a FORMA da
+# variável e não devem ter valor nenhum.
+#
+# Os fixtures NÃO saem por caminho. Dispensar `backend/tests/.*` inteiro parece
+# prático e é um ponto cego permanente: um segredo de verdade colado num teste
+# passaria verde para sempre. Por isso cada valor falso está listado abaixo, e
+# qualquer achado novo em backend/tests continua bloqueando.
 paths = [
-  '''backend/tests/.*''',
   '''.*\.example$''',
   '''.*\.example\..*''',
 ]
@@ -23,4 +29,8 @@ regexes = [
   # A chave RSA de fixture nos testes de CRM tem corpo "MIIEow==" — 8 caracteres,
   # não é uma chave utilizável.
   '''-----BEGIN RSA PRIVATE KEY-----\\nMIIEow==''',
+  # base64 de "testkey-testkey-testkey!" e afins, usados pelo conftest dos testes.
+  '''dGVzdGtleS10ZXN0a2V5LXRlc3RrZXkh''',
+  '''dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleT0=''',
+  '''sk_live_supersecret''',
 ]
