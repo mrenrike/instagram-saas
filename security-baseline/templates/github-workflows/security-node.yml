@@ -1,0 +1,59 @@
+# Item 20 — varredura de segurança para projetos Node/Next.js.
+name: security
+
+on:
+  # Só a branch padrão. Com `branches: ["**"]` cada push numa branch de PR
+  # dispara DUAS execuções idênticas (uma por `push`, outra por `pull_request`).
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+  # O gitleaks-action lista os commits do PR para varrer o diff; sem esta
+  # permissão a chamada volta 403 e o job falha antes de escanear qualquer coisa.
+  pull-requests: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: segredos no código e no histórico
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # o histórico inteiro, não só o último commit
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
+  dependencies:
+    name: CVEs nas dependências
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci --ignore-scripts
+      # --audit-level=high: uma CVE "moderate" numa dependência de build não deve
+      # bloquear merge; uma "high" em runtime deve.
+      - run: npm audit --audit-level=high
+
+  static-analysis:
+    name: análise estática
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npx --yes semgrep --config p/javascript --config p/react --config p/security-audit --error --quiet .

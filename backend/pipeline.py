@@ -4,17 +4,21 @@ Async pipeline: fetching_data → analyzing → building_report → sending_emai
 SLA: 5 minutes total. Any unhandled exception sets pipeline_status=error.
 """
 import asyncio
-import anthropic
-from datetime import datetime, timezone, timedelta
+import logging
+from datetime import datetime, timedelta, timezone
 
-from .session import load_session, save_session, SessionNotFound
-from .instagram import fetch_posts, fetch_user_info, TokenExpiredError, GraphAPIError
-from .analyzer import calc_metrics, make_charts
-from .report import build_html_report, build_txt_report
-from .email_service import send_report_email, send_error_email
-from .crm import append_to_crm
+import anthropic
+
 from .admin import notify_admin_error
+from .analyzer import calc_metrics, make_charts
 from .config import get_config
+from .crm import append_to_crm
+from .email_service import send_error_email, send_report_email
+from .instagram import TokenExpiredError, fetch_posts, fetch_user_info
+from .report import build_html_report, build_txt_report
+from .session import SessionNotFound, load_session, save_session
+
+logger = logging.getLogger(__name__)
 
 BRT = timezone(timedelta(hours=-3))
 SLA_SECONDS = 300  # 5 minutes
@@ -87,11 +91,12 @@ Gere um relatório completo com:
 async def run_pipeline(session_id: str) -> None:
     try:
         await asyncio.wait_for(_run(session_id), timeout=SLA_SECONDS)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         try:
             session = load_session(session_id)
             session.pipeline_status = "error"
             session.pipeline_error = "Pipeline timeout (>5min)"
+            session.pipeline_error_kind = "timeout"
             save_session(session)
         except SessionNotFound:
             pass
@@ -112,13 +117,17 @@ async def _run(session_id: str) -> None:
     except TokenExpiredError:
         session.pipeline_status = "error"
         session.pipeline_error = "Token expirado"
+        session.pipeline_error_kind = "token_expired"
         save_session(session)
         await send_error_email(session.email, session.instagram_handle, reason="token_expired")
         await notify_admin_error(session_id, "Token expired")
         return
     except Exception as e:
+        # Item 17 — the detail is kept for operators; the client only ever sees the kind.
+        logger.exception("Graph API failure for session %s", session_id)
         session.pipeline_status = "error"
         session.pipeline_error = str(e)
+        session.pipeline_error_kind = "graph_error"
         save_session(session)
         await send_error_email(session.email, session.instagram_handle, reason="graph_error")
         await notify_admin_error(session_id, f"Graph API error: {e}")
@@ -150,8 +159,10 @@ async def _run(session_id: str) -> None:
         )
 
     except Exception as e:
+        logger.exception("Analysis failure for session %s", session_id)
         session.pipeline_status = "error"
         session.pipeline_error = str(e)
+        session.pipeline_error_kind = "analysis_error"
         save_session(session)
         await send_error_email(session.email, session.instagram_handle, reason="analysis_error")
         await notify_admin_error(session_id, f"Analysis/Claude error: {e}")
@@ -170,8 +181,7 @@ async def _run(session_id: str) -> None:
         )
 
     except Exception as e:
-        import logging
-        logging.error(f"Email send failed for {session_id}: {e}")
+        logger.error("Email send failed for %s: %s", session_id, e)
         await notify_admin_error(session_id, f"Email send failed: {e}")
 
     # Step 5: Done + schedule follow-up

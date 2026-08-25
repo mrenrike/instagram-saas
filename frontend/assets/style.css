@@ -26,3 +26,14 @@ h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 16px; }
 p { color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
 .price { font-size: 2.5rem; font-weight: 800; color: var(--green); }
 .highlight { color: var(--indigo); }
+
+/* Item 12 — honeypot field: invisible to users, present in the DOM for bots.
+   `display:none` is avoided because some bots skip hidden inputs; this keeps the
+   field in the layout tree but entirely off-screen. */
+.hp-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

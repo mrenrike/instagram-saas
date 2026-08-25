@@ -1,76 +1,97 @@
-# backend/tests/test_webhook.py
-import pytest
-import hmac, hashlib, json, os
-from fastapi.testclient import TestClient
-from unittest.mock import patch, AsyncMock
+import hashlib
+import hmac
+import json
+from unittest.mock import patch
 
-for k, v in {
-    "SESSION_ENCRYPTION_KEY": "dGVzdGtleS10ZXN0a2V5LXRlc3RrZXkh",
-    "SESSIONS_DIR": "/tmp/test_sessions_wh",
-    "OPENPIX_APP_ID": "x",
-    "META_APP_ID": "x", "META_APP_SECRET": "x", "META_REDIRECT_URI": "x",
-    "ANTHROPIC_API_KEY": "x", "RESEND_API_KEY": "x",
-    "ADMIN_EMAIL": "a@b.com", "ADMIN_SECRET": "x",
-    "GOOGLE_SHEETS_ID": "x", "GOOGLE_SERVICE_ACCOUNT_JSON": '{"type":"service_account"}',
-}.items():
-    os.environ.setdefault(k, v)
+from backend.tests.conftest import _TEST_ENV
 
-# Force-set the webhook secret so it overrides any value set by other test modules,
-# then clear the lru_cache so get_config() reloads with the correct secret.
-os.environ["OPENPIX_WEBHOOK_SECRET"] = "mysecret"
-from backend.config import get_config
-get_config.cache_clear()
+WEBHOOK_SECRET = _TEST_ENV["OPENPIX_WEBHOOK_SECRET"]
 
 
-def sign(payload: bytes, secret: str) -> str:
+def sign(payload: bytes, secret: str = WEBHOOK_SECRET) -> str:
     return hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
 
 
-def _make_cfg():
-    """Return a Config-like object with OPENPIX_WEBHOOK_SECRET = 'mysecret'."""
-    from backend.config import Config
-    cfg = Config.__new__(Config)
-    # Copy all attributes from a real Config, then override the secret.
-    real = get_config()
-    cfg.__dict__.update(real.__dict__)
-    cfg.OPENPIX_WEBHOOK_SECRET = "mysecret"
-    return cfg
+def _completed(session_id: str) -> bytes:
+    return json.dumps({"charge": {"status": "COMPLETED", "correlationID": session_id}}).encode()
 
 
-def test_webhook_rejects_invalid_signature(tmp_path):
-    with patch("backend.session.SESSIONS_DIR", str(tmp_path)), \
-         patch("backend.webhook.get_config", return_value=_make_cfg()):
-        from backend.main import app
-        client = TestClient(app)
-        payload = json.dumps({"charge": {"status": "COMPLETED", "correlationID": "abc"}}).encode()
+def test_webhook_rejects_invalid_signature(client):
+    payload = _completed("00000000-0000-4000-8000-000000000000")
+    resp = client.post(
+        "/webhook/openpix",
+        content=payload,
+        headers={"x-webhook-token": "badsig", "Content-Type": "application/json"},
+    )
+    assert resp.status_code == 401
+
+
+def test_webhook_rejects_missing_signature(client):
+    payload = _completed("00000000-0000-4000-8000-000000000000")
+    resp = client.post(
+        "/webhook/openpix", content=payload, headers={"Content-Type": "application/json"}
+    )
+    assert resp.status_code == 401
+
+
+def test_webhook_accepts_valid_signature_and_marks_paid(client, new_session):
+    from backend.session import load_session
+
+    session, _ = new_session(instagram_handle="@u")
+    payload = _completed(session.session_id)
+
+    with patch("backend.webhook.asyncio") as mock_asyncio:
+        mock_asyncio.create_task = lambda coro: coro.close()
         resp = client.post(
             "/webhook/openpix",
             content=payload,
-            headers={"x-webhook-token": "badsig", "Content-Type": "application/json"},
+            headers={"x-webhook-token": sign(payload), "Content-Type": "application/json"},
         )
-        assert resp.status_code == 401
+
+    assert resp.status_code == 200
+    assert load_session(session.session_id).payment_status == "paid"
 
 
-def test_webhook_accepts_valid_signature_and_marks_paid(tmp_path):
-    with patch("backend.session.SESSIONS_DIR", str(tmp_path)), \
-         patch("backend.webhook.get_config", return_value=_make_cfg()):
-        from backend.session import Session, save_session
-        s = Session.new("@u", "BUSINESS", "tok")
-        save_session(s)
+def test_webhook_is_idempotent(client, new_session):
+    from backend.session import load_session, save_session
 
-        from backend.main import app
-        with patch("backend.webhook.asyncio") as mock_asyncio:
-            mock_asyncio.create_task = lambda coro: coro
-            client = TestClient(app)
-            payload = json.dumps({"charge": {"status": "COMPLETED", "correlationID": s.session_id}}).encode()
-            sig = sign(payload, "mysecret")
-            resp = client.post(
-                "/webhook/openpix",
-                content=payload,
-                headers={"x-webhook-token": sig, "Content-Type": "application/json"},
-            )
-        assert resp.status_code == 200
+    session, _ = new_session()
+    session.payment_status = "paid"
+    save_session(session)
+    payload = _completed(session.session_id)
 
-        from backend.session import load_session
-        updated = load_session(s.session_id)
-        assert updated.payment_status == "paid"
+    with patch("backend.webhook.asyncio") as mock_asyncio:
+        called = []
+        mock_asyncio.create_task = lambda coro: (called.append(1), coro.close())
+        resp = client.post(
+            "/webhook/openpix",
+            content=payload,
+            headers={"x-webhook-token": sign(payload), "Content-Type": "application/json"},
+        )
+
+    assert resp.status_code == 200
+    assert called == []  # the pipeline is not re-queued
+    assert load_session(session.session_id).payment_status == "paid"
+
+
+# --- Item 14 ------------------------------------------------------------------
+def test_webhook_with_traversal_correlation_id_is_ignored(client):
+    payload = json.dumps(
+        {"charge": {"status": "COMPLETED", "correlationID": "../../../etc/passwd"}}
+    ).encode()
+    resp = client.post(
+        "/webhook/openpix",
+        content=payload,
+        headers={"x-webhook-token": sign(payload), "Content-Type": "application/json"},
+    )
+    assert resp.status_code == 200  # accepted and discarded, never a filesystem read
+
+
+def test_webhook_rejects_malformed_json(client):
+    payload = b"{not json"
+    resp = client.post(
+        "/webhook/openpix",
+        content=payload,
+        headers={"x-webhook-token": sign(payload), "Content-Type": "application/json"},
+    )
+    assert resp.status_code == 400

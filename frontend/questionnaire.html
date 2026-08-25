@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https:; form-action 'none'; base-uri 'none'; frame-ancestors 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Conte sobre sua conta — Instagram Analytics</title>
 <link rel="stylesheet" href="assets/style.css">
@@ -61,6 +63,17 @@
       <input type="text" name="coupon_code" placeholder="TESTER10" style="text-transform:uppercase">
       <div id="coupon-msg" class="error-msg" style="display:none"></div>
 
+      <!-- Item 12: honeypot. Hidden from users and from screen readers; bots that
+           fill in every input trip it and the server rejects the submission. -->
+      <div class="hp-field" aria-hidden="true">
+        <label for="website">Website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <!-- Item 12: mount point for Cloudflare Turnstile. Enable it by setting
+           TURNSTILE_SECRET on the API and adding the widget script here. -->
+      <div id="captcha-slot"></div>
+
       <div id="error-msg" class="error-msg" style="display:none;margin-top:12px"></div>
       <button type="submit" class="btn" style="margin-top:24px" id="submit-btn">
         Continuar para o pagamento →
@@ -71,52 +84,6 @@
 
 <script src="assets/config.js"></script>
 <script src="assets/flow.js"></script>
-<script>
-const sessionId = getSessionId();
-if (!sessionId) window.location.href = '/';
-
-document.getElementById('form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.textContent = 'Enviando...';
-
-  const fd = new FormData(e.target);
-  const competitors = (fd.get('competitors') || '').split(',').map(s => s.trim()).filter(Boolean);
-
-  const body = {
-    name: fd.get('name'),
-    email: fd.get('email'),
-    niche: fd.get('niche'),
-    goal: fd.get('goal'),
-    audience: fd.get('audience'),
-    tone: fd.get('tone'),
-    management_style: fd.get('management_style'),
-    competitors,
-    extra_context: fd.get('extra_context') || '',
-    coupon_code: fd.get('coupon_code') || null,
-  };
-
-  try {
-    const resp = await fetch(`${BACKEND}/questionnaire/${sessionId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const data = await resp.json();
-    if (!resp.ok) {
-      document.getElementById('error-msg').textContent = data.detail || 'Erro ao enviar.';
-      document.getElementById('error-msg').style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Continuar para o pagamento →';
-      return;
-    }
-    window.location.href = `/checkout.html?session_id=${sessionId}`;
-  } catch {
-    document.getElementById('error-msg').textContent = 'Erro de conexão. Tente novamente.';
-    document.getElementById('error-msg').style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Continuar para o pagamento →';
-  }
-});
-</script>
+<script src="assets/page-questionnaire.js"></script>
 </body>
 </html>

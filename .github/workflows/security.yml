@@ -1,0 +1,86 @@
+# Item 20 — varredura de segurança contínua.
+#
+# Quatro camadas, cada uma pegando o que as outras não pegam:
+#   gitleaks  — segredos no diff e no histórico (itens 1, 2)
+#   pip-audit — CVEs conhecidos nas dependências
+#   bandit    — padrões inseguros no nosso próprio código
+#   semgrep   — regras de segurança específicas de Python/FastAPI
+name: security
+
+on:
+  # Só a branch padrão. Com `branches: ["**"]` cada push numa branch de PR
+  # disparava DUAS execuções idênticas (uma por `push`, outra por `pull_request`),
+  # com dois conjuntos de checks e resultados divergentes no gitleaks.
+  push:
+    branches: [feature/instagram-saas]
+  pull_request:
+  schedule:
+    # Segunda-feira 06:00 UTC (03:00 BRT). Uma CVE nova aparece sem que ninguém
+    # faça push — sem o agendamento, o projeto só descobre no próximo commit.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+  # O gitleaks-action lista os commits do PR para varrer o diff; sem esta
+  # permissão a chamada volta 403 e o job falha antes de escanear qualquer coisa.
+  pull-requests: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: segredos no código e no histórico
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # O histórico completo é necessário: um segredo removido no último commit
+          # continua exposto em todos os commits anteriores.
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
+  dependencies:
+    name: CVEs nas dependências
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install --upgrade pip pip-audit
+      - name: pip-audit
+        run: pip-audit --requirement backend/requirements.txt --strict --progress-spinner off
+
+  static-analysis:
+    name: análise estática do código
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install --upgrade pip bandit[toml] semgrep
+      - name: bandit
+        # -ll: falha em severidade média ou alta. As de baixa severidade são
+        # heurísticas de nome (B105 marca a chave "token_expired" de um dicionário de
+        # mensagens como se fosse senha) — ficam no relatório, não bloqueiam o merge.
+        run: bandit -c pyproject.toml -r backend -ll -q
+      - name: semgrep
+        run: semgrep --config p/python --config p/security-audit --error --quiet backend/
+
+  tests:
+    name: testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install --upgrade pip -r requirements.txt
+      - run: python -m pytest backend/tests -q

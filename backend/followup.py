@@ -5,11 +5,12 @@ Sends email on D+3 after report delivery.
 """
 import asyncio
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from .session import load_session, save_session, SESSIONS_DIR
+from .config import get_config
 from .email_service import send_followup_email
+from .session import load_session, save_session, validate_session_id
 
 BRT = timezone(timedelta(hours=-3))
 CHECK_INTERVAL = 600  # 10 minutes
@@ -26,17 +27,21 @@ async def start_followup_scheduler() -> None:
 
 
 async def _check_followups() -> None:
-    sessions_path = Path(SESSIONS_DIR)
+    sessions_path = Path(get_config().SESSIONS_DIR)
     if not sessions_path.exists():
         return
 
     now = datetime.now(BRT)
 
     for enc_file in sessions_path.glob("*.json.enc"):
-        session_id = enc_file.stem.replace(".json", "")
+        # The filename is derived from a UUID we generated, but validate it anyway:
+        # this loop feeds a path back into load_session, and a stray file dropped into
+        # the directory should be skipped rather than followed (item 14).
         try:
+            session_id = validate_session_id(enc_file.stem.replace(".json", ""))
             session = load_session(session_id)
-        except Exception:
+        except Exception:  # noqa: BLE001 — one unreadable file must not stop the sweep
+            logging.warning("Skipping unreadable session file %s", enc_file.name)
             continue
 
         if (
