@@ -1,6 +1,6 @@
 ---
 name: sales-research
-description: Pesquisa e analise firmografica de uma empresa: setor, porte, stack tecnologico, sinais de crescimento, financiamento e fit score. Use para entender uma empresa antes de abordar.
+description: "Pesquisa e analise firmografica de uma empresa: setor, porte, stack tecnologico, sinais de crescimento, financiamento e fit score. Use para entender uma empresa antes de abordar."
 license: MIT
 ---
 

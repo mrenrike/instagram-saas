@@ -1,3 +1,9 @@
+---
+name: sales-competitive
+description: Subagent that maps competitive positioning and switching cost. Launched by the sales-prospect skill.
+tools: WebFetch, WebSearch, Read, Bash
+---
+
 # Sales Competitive Positioning Subagent
 
 ## Role

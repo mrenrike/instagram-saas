@@ -1,6 +1,6 @@
 ---
 name: sales-prospect
-description: Analise completa de um prospect a partir de uma URL ou nome de empresa: pesquisa a empresa, mapeia decisores, qualifica a oportunidade, analisa concorrentes e gera o e-mail de abordagem. Use para 'analisa essa empresa', 'vale a pena prospectar X', 'pesquisa esse lead'.
+description: "Analise completa de um prospect a partir de uma URL ou nome de empresa: pesquisa a empresa, mapeia decisores, qualifica a oportunidade, analisa concorrentes e gera o e-mail de abordagem. Use para 'analisa essa empresa', 'vale a pena prospectar X', 'pesquisa esse lead'."
 license: MIT
 ---
 

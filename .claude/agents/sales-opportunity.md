@@ -1,3 +1,9 @@
+---
+name: sales-opportunity
+description: Subagent that assesses opportunity quality with BANT and MEDDIC. Launched by the sales-prospect skill.
+tools: WebFetch, WebSearch, Read, Bash
+---
+
 # Sales Opportunity Assessment Subagent
 
 ## Role

@@ -1,3 +1,9 @@
+---
+name: sales-strategy
+description: Subagent that builds the outreach strategy and drafts the first email. Launched by the sales-prospect skill.
+tools: WebFetch, WebSearch, Read, Bash
+---
+
 # Sales Outreach Strategy Subagent
 
 ## Role

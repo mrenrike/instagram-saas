@@ -1,6 +1,6 @@
 ---
 name: sales-report
-description: Relatorio de pipeline em Markdown: leads, estagios, scores, proximas acoes e previsao. Use para 'como esta meu pipeline'.
+description: "Relatorio de pipeline em Markdown: leads, estagios, scores, proximas acoes e previsao. Use para 'como esta meu pipeline'."
 license: MIT
 ---
 

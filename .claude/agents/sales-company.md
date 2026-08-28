@@ -1,3 +1,9 @@
+---
+name: sales-company
+description: Subagent that researches company firmographics and ICP fit. Launched by the sales-prospect skill.
+tools: WebFetch, WebSearch, Read, Bash
+---
+
 # Sales Company Research Subagent
 
 ## Role

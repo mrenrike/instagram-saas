@@ -98,6 +98,52 @@ português, cadência de 5 toques em 3 semanas e horários de melhor resposta no
 
 ---
 
+## A versão nacional da skill principal: `prospect-br`
+
+A `sales-prospect` é a skill mais usada do pacote (`/sales prospect <url>`), e é também a
+que mais falha com empresa brasileira. `prospect-br` é ela transformada — mesma arquitetura
+(descoberta → 5 subagentes em paralelo → síntese pontuada), com quatro mudanças estruturais:
+
+**1. Aceita alvo sem site.** A original exige URL e **aborta** se o site não carrega
+("Do NOT proceed to Phase 2 if zero pages are accessible"). A maior parte da PME brasileira
+não tem site — tem Instagram e ficha no Google Maps. Na versão BR a entrada pode ser URL,
+CNPJ, nome+cidade ou `@perfil`, e ausência de site é sinal de compra, não erro.
+
+**2. CNPJ como espinha dorsal.** A original infere porte e setor lendo o site. A BR consulta
+BrasilAPI e obtém razão social, CNAE, capital social, data de abertura, porte, regime
+tributário, situação cadastral e QSA — tudo oficial, nada inferido. Situação cadastral
+diferente de ATIVA vira **gate rígido**: para a análise, score zero, não gasta subagente.
+
+**3. O decisor é o sócio.** A original procura "VP of Engineering" e "Head of Growth" —
+cargos que não existem em empresa de 5 a 200 funcionários no Brasil. A BR parte do QSA, que
+entrega o nome do sócio-administrador de graça, e distingue sócio-administrador (decide) de
+sócio sem administração (não é o caminho) e de sócio PJ (há holding acima).
+
+**4. Pesos recalibrados.** Original: fit 25 / contato 20 / oportunidade 20 / concorrência 15 /
+abordagem 20. BR: **fit 25 / decisor 25 / oportunidade 25 / concorrência 10 / abordagem 15**.
+Decisor sobe porque na PME achar o sócio é quase toda a venda. Concorrência cai porque
+raramente há incumbente sofisticado para deslocar — o concorrente real é a planilha e o
+WhatsApp, que o subagente de oportunidade já captura como dor.
+
+Também troquei as categorias de empresa (SaaS/Startup/Enterprise → comércio local, clínica,
+serviços profissionais, indústria/distribuidora, e-commerce, franquia, prestador com agenda)
+e os 5 subagentes ganharam versão brasileira: `br-empresa`, `br-decisores`, `br-oportunidade`,
+`br-concorrencia`, `br-abordagem`.
+
+**Os 5 agentes originais também estavam sem frontmatter** — mesmo defeito das skills, mesma
+correção aplicada.
+
+### Ressalva importante
+
+Os nomes de campo da BrasilAPI (`razao_social`, `descricao_situacao_cadastral`, `cnae_fiscal`,
+`qsa`, `capital_social`…) vêm do meu conhecimento do schema, **não de uma chamada real** — a
+política de rede desta sessão bloqueia a API (403 no proxy). Na primeira execução de verdade,
+confira se os campos batem e ajuste a Fase 0.2 da `prospect-br` se algum nome divergir.
+
+Quando usar cada uma: alvo brasileiro → `prospect-br`; alvo estrangeiro → `sales-prospect`.
+
+---
+
 ## Como usar
 
 ```bash
@@ -107,7 +153,7 @@ pip install reportlab beautifulsoup4 requests   # só para o relatório em PDF
 ```
 1. /sales icp                          # define o cliente ideal (uma vez)
 2. "acha 20 <segmento> em <cidade>"    # prospeccao-br monta a lista
-3. /sales prospect <url>               # análise completa de quem pontuou ≥ 70
+3. "analisa a <empresa>"               # prospect-br: CNPJ, QSA, 5 agentes, score
 4. "escreve a abordagem pra esse lead" # abordagem-br, em português e com LGPD
 5. /sales followup                     # cadência de quem não respondeu
 6. /sales report                       # estado do pipeline

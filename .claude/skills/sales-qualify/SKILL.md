@@ -1,6 +1,6 @@
 ---
 name: sales-qualify
-description: Qualificacao de leads com BANT e MEDDIC: orcamento, autoridade, necessidade, prazo, criterios de decisao e champion. Use para decidir se um lead merece esforco comercial.
+description: "Qualificacao de leads com BANT e MEDDIC: orcamento, autoridade, necessidade, prazo, criterios de decisao e champion. Use para decidir se um lead merece esforco comercial."
 license: MIT
 ---
 

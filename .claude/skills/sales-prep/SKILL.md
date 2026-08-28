@@ -1,6 +1,6 @@
 ---
 name: sales-prep
-description: Briefing de preparacao para reuniao comercial: contexto da empresa, perfil dos participantes, perguntas de descoberta e objecoes provaveis. Use antes de call ou demo.
+description: "Briefing de preparacao para reuniao comercial: contexto da empresa, perfil dos participantes, perguntas de descoberta e objecoes provaveis. Use antes de call ou demo."
 license: MIT
 ---
 

@@ -1,3 +1,9 @@
+---
+name: sales-contacts
+description: Subagent that maps the buying committee and decision makers. Launched by the sales-prospect skill.
+tools: WebFetch, WebSearch, Read, Bash
+---
+
 # Sales Contact Intelligence Subagent
 
 ## Role

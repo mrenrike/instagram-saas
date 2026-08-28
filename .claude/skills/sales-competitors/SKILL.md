@@ -1,6 +1,6 @@
 ---
 name: sales-competitors
-description: Inteligencia competitiva: mapeia concorrentes de um prospect ou do seu proprio produto, posicionamento e battlecards. Use para 'contra quem eu estou competindo'.
+description: "Inteligencia competitiva: mapeia concorrentes de um prospect ou do seu proprio produto, posicionamento e battlecards. Use para 'contra quem eu estou competindo'."
 license: MIT
 ---
 
