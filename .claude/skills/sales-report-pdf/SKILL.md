@@ -11,7 +11,7 @@ license: MIT
 - **Invocation:** `/sales report-pdf`
 - **Input:** None (reads SALES-REPORT.md and prospect files from current directory)
 - **Output:** `SALES-REPORT-{YYYY-MM-DD}.pdf` written to the current working directory
-- **Dependencies:** Python 3, `reportlab` library, `scripts/generate_pdf_report.py`
+- **Dependencies:** Python 3, `reportlab` library, `sales/scripts/generate_pdf_report.py` (na pasta de skills)
 
 ---
 
@@ -185,7 +185,7 @@ Write a JSON file at `_pdf_input.json` in the current working directory containi
 
 ### Step 5: Locate or Create the PDF Generation Script
 
-Check if the PDF generation script exists at `scripts/generate_pdf_report.py` relative to the project root.
+Check if the PDF generation script exists at `sales/scripts/generate_pdf_report.py` (na pasta de skills) relative to the project root.
 
 **Finding the project root:** Look for the `scripts/` directory in these locations (in order):
 1. The ai-sales-team-claude project directory (where the agents/ and skills/ folders are)
@@ -193,7 +193,7 @@ Check if the PDF generation script exists at `scripts/generate_pdf_report.py` re
 3. One level up from the current working directory
 
 **If the script does NOT exist:**
-- Inform the user: "The PDF generation script was not found at `scripts/generate_pdf_report.py`. This script is part of the AI Sales Team project setup. Please ensure the project is properly installed."
+- Inform the user: "The PDF generation script was not found at `sales/scripts/generate_pdf_report.py` (na pasta de skills). This script is part of the AI Sales Team project setup. Please ensure the project is properly installed."
 - Stop execution.
 
 **If the script exists:**

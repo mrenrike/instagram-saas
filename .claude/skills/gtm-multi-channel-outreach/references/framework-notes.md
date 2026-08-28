@@ -5,8 +5,8 @@ Reference tables for `SKILL.md`. Apply named frameworks to justify recommendatio
 ## Primary frameworks
 
 - **Guillaume Moubeche — 4–9 touch multichannel** — Problem-first sequences. `cold-email-strategy/references/lemlist-guillaume-outbound.md`
-- **Ryan Reisert — CRM Activity Buckets** — Daily priority across channels. `references/ryan-reisert-cold-calling.md`
-- **Jeb Blount — Omni-channel Golden Hours** — Blocked prospecting time. `references/jeb-blount-prospecting.md`
+- **Ryan Reisert — CRM Activity Buckets** — Daily priority across channels. [ryan-reisert-cold-calling.md](https://github.com/LeadMagic/gtm-skills/blob/main/references/ryan-reisert-cold-calling.md)
+- **Jeb Blount — Omni-channel Golden Hours** — Blocked prospecting time. [jeb-blount-prospecting.md](https://github.com/LeadMagic/gtm-skills/blob/main/references/jeb-blount-prospecting.md)
 - **Justin Michael — Sales Borg** — Human + machine orchestration. `cold-email-strategy/references/justin-michael-sales-borg.md`
 
 ## Authoritative foundations

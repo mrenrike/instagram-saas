@@ -108,8 +108,11 @@ cadastro não acompanhou, o que por si só é gancho de conversa.
 ### 1.4 Extração automatizada (se houver site)
 
 ```bash
-python3 .claude/skills/sales/scripts/analyze_prospect.py --url <url> --output json
+# o caminho da pasta de skills muda por harness (.claude/skills, .agents/skills, ...)
+python3 "$(dirname <caminho desta skill>)/sales/scripts/analyze_prospect.py" --url <url> --output json
 ```
+Não achou o script: procure `analyze_prospect.py` a partir da raiz do projeto. Ele é
+opcional — sem ele, faça a extração manualmente com o conteúdo já coletado.
 Falhou ou não há site: registre `extração automatizada indisponível` e siga com o manual.
 O script engole erro de rede em silêncio e devolve resultado vazio — **vazio não prova
 ausência**. Confirme no navegador antes de concluir que a empresa não tem página de equipe.
@@ -138,19 +141,33 @@ Lacunas: <o que não foi possível obter>
 
 ---
 
-## Fase 2 — 5 subagentes em paralelo
+## Fase 2 — As 5 análises
 
-Dispare simultaneamente, cada um com o briefing completo. Todos respondem **em português**.
+Cinco análises independentes, cada uma com uma nota 0-100 e um peso. A especificação
+completa de cada uma está em `references/` — leia o arquivo antes de executar a análise.
 
-| # | Agente | Avalia | Peso |
-|---|--------|--------|------|
-| 1 | `br-empresa` | Fit da empresa com o ICP | 25% |
-| 2 | `br-decisores` | Acesso ao decisor | 25% |
-| 3 | `br-oportunidade` | Qualidade da oportunidade (BANT/MEDDIC) | 25% |
-| 4 | `br-concorrencia` | Posição competitiva | 10% |
-| 5 | `br-abordagem` | Prontidão da abordagem | 15% |
+| # | Análise | Especificação | Peso |
+|---|---------|---------------|------|
+| 1 | Empresa e fit com o ICP | `references/br-empresa.md` | 25% |
+| 2 | Acesso ao decisor | `references/br-decisores.md` | 25% |
+| 3 | Oportunidade (BANT/MEDDIC) | `references/br-oportunidade.md` | 25% |
+| 4 | Concorrência | `references/br-concorrencia.md` | 10% |
+| 5 | Prontidão da abordagem | `references/br-abordagem.md` | 15% |
 
-Cada um devolve nota 0-100 na sua dimensão, com justificativa e **fonte por afirmação**.
+### Como executar, conforme o harness
+
+**Com subagentes (Claude Code):** dispare os 5 em paralelo — `br-empresa`, `br-decisores`,
+`br-oportunidade`, `br-concorrencia`, `br-abordagem` — passando o briefing de descoberta
+completo para cada um. Cada agente lê a sua especificação em `references/` e devolve a saída.
+
+**Sem subagentes (Antigravity e outros):** execute as 5 em sequência você mesmo, na ordem
+da tabela. Para cada uma: leia `references/<arquivo>`, execute o que ele descreve com o
+briefing, e produza a saída no formato definido lá antes de passar para a próxima. Nada se
+perde — só demora mais, porque não há paralelismo.
+
+Em ambos os casos: respostas **em português**, nota 0-100 por dimensão, fonte em cada
+afirmação. A ordem importa quando você roda em sequência: 2 (decisores) alimenta 3
+(oportunidade, que precisa saber quem decide) e 5 (abordagem, que precisa do destinatário).
 
 ---
 

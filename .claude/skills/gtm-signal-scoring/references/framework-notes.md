@@ -4,7 +4,7 @@ Reference tables for `SKILL.md`. Apply named frameworks to justify recommendatio
 
 ## Primary frameworks
 
-- **Joey Gilkey — Phone Intent** — Reachability tier for phone-first routing. `references/joey-gilkey-bucketing.md`
+- **Joey Gilkey — Phone Intent** — Reachability tier for phone-first routing. [joey-gilkey-bucketing.md](https://github.com/LeadMagic/gtm-skills/blob/main/references/joey-gilkey-bucketing.md)
 - **Justin Michael — TQ / trigger-based outbound** — Time + trigger quality scoring. `cold-email-strategy/references/justin-michael-sales-borg.md`
 - **Jordan Crawford — Pain-based segments** — Score by verifiable pain signal, not firmographics alone
 - **Henry Schuck — ZoomInfo intent** — Composite intent for enterprise (reference pattern)

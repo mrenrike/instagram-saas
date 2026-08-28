@@ -177,6 +177,65 @@ diagnóstico → relatório → serviço está detalhada na Fase 5 da `abordagem
 
 ---
 
+## Rodando no Claude Code e no Antigravity
+
+As skills em si já eram portáveis: `SKILL.md` com frontmatter YAML, mais `references/`,
+`scripts/` e `templates/` — exatamente a estrutura que o Antigravity espera, e todas as
+descrições cabem no limite de 1024 caracteres. O que **não** era portável eram os subagentes.
+
+**Fonte única:** `.claude/skills/`. Tudo o mais é espelho gerado.
+
+```bash
+./scripts/setup-skills.sh            # espelha em .agents/skills/ (Antigravity, Gemini, Codex)
+./scripts/setup-skills.sh --global   # + instala em ~/.gemini/antigravity/skills/
+./scripts/setup-skills.sh --legacy   # usa .agent/skills/ (Antigravity mais antigo)
+./scripts/setup-skills.sh --check    # confere se o espelho está em dia
+./scripts/setup-skills.sh --uninstall
+```
+
+O script cria symlink quando o sistema permite e cai para cópia quando não permite (Windows
+sem symlink habilitado), marcando a cópia para saber removê-la depois. `.agents/` é gerado
+e não versionado — os links são absolutos e não sobreviveriam a outro clone.
+
+### O problema dos subagentes, e como foi resolvido
+
+A `prospect-br` dispara 5 subagentes. Claude Code tem isso; Antigravity não. Em vez de manter
+duas versões que divergem, a especificação de cada análise virou **um arquivo em
+`prospect-br/references/`**, e a Fase 2 passou a descrever os dois caminhos:
+
+- **com subagentes** — dispara os 5 em paralelo; cada um lê a sua especificação
+- **sem subagentes** — executa as 5 em sequência, lendo os mesmos arquivos
+
+Os arquivos em `.claude/agents/br-*.md` viraram despachantes de ~10 linhas que apontam para
+a especificação. Nada de conteúdo duplicado, e nenhuma das duas execuções perde etapa — sem
+paralelismo só demora mais.
+
+### Duas quebras que o cherry-pick tinha causado
+
+Achei ambas escrevendo um validador, não lendo o código:
+
+1. **`gtm-signal-scoring`, `gtm-multi-channel-outreach` e `gtm-cold-email-copywriting`**
+   citavam 6 arquivos de uma biblioteca compartilhada que fica na **raiz** do `gtm-skills` —
+   fora das pastas que eu copiei. Tentei importar o fecho transitivo e ele explodiu para 136
+   arquivos (os índices linkam a biblioteca inteira), com 27 alvos que nem existem no repo de
+   origem. Revertido: os 6 links agora apontam para o upstream no GitHub, que resolve sempre.
+2. **`sales-report-pdf`** apontava para `scripts/generate_pdf_report.py` dentro da própria
+   skill; o script fica em `sales/scripts/`. Caminho corrigido.
+
+Link quebrado numa skill é pior que referência ausente: o agente tenta ler e falha no meio
+da tarefa. Por isso o validador ficou versionado:
+
+```bash
+python3 scripts/check-skills.py    # sai 1 se achar problema
+```
+
+Ele checa frontmatter (ausente, YAML inválido, `description` faltando ou acima de 1024
+chars), link para arquivo inexistente e pasta sem `SKILL.md`. Funciona com ou sem PyYAML —
+sem a lib, usa um parser próprio que entende escalar de bloco e mapa aninhado. Rode antes
+de commitar qualquer mudança nas skills.
+
+---
+
 ## Crédito
 
 - `sales*` — [ai-sales-team-claude](https://github.com/zubair-trabzada/ai-sales-team-claude), MIT © 2026 Zubair Trabzada

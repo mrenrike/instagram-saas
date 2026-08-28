@@ -1,3 +1,9 @@
 .worktrees/
 backend/coupons.json
 frontend/assets/config.js
+
+# gerado por scripts/setup-skills.sh
+.agents/
+.agent/
+
+__pycache__/

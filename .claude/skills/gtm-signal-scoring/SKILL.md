@@ -56,7 +56,7 @@ clearest, most recent tie to purchase intent leads the outreach.
 
 For **phone-led** outbound, layer **Joey Gilkey Phone Intent** on top of buying
 signals — reachability is a separate dimension from purchase intent. High intent
-+ low phone intent → email/LI first. → `references/joey-gilkey-bucketing.md`
++ low phone intent → email/LI first. → [joey-gilkey-bucketing.md](https://github.com/LeadMagic/gtm-skills/blob/main/references/joey-gilkey-bucketing.md)
 
 ## Prerequisites
 
@@ -163,8 +163,8 @@ stage struggle with ramp time. We helped [similar company] cut it by 40%."
 - `references/framework-notes.md` — Named frameworks and reference tables
 - `templates/output-template.md` — Deliverable shell for agent output
 - `scripts/check-output.py` — Lightweight deliverable validator
-- `references/joey-gilkey-bucketing.md` — Phone Intent scoring layer (repo root)
-- `references/cold-calling-experts-index.md` — Phone vs email signal router (repo root)
+- [joey-gilkey-bucketing.md](https://github.com/LeadMagic/gtm-skills/blob/main/references/joey-gilkey-bucketing.md) — Phone Intent scoring layer (repo root)
+- [cold-calling-experts-index.md](https://github.com/LeadMagic/gtm-skills/blob/main/references/cold-calling-experts-index.md) — Phone vs email signal router (repo root)
 
 ## Related Skills
 

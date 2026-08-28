@@ -2,7 +2,7 @@
 
 **Sources:** Pat Spielmann — 💼 [LinkedIn](https://www.linkedin.com/in/pspielmann/) · 🔗 [patrickspielmann.com](https://www.patrickspielmann.com/) · [LeadMagic](https://leadmagic.io/) · [Why I'm Building LeadEngine.ai](https://your.leadengine.ai/p/why-i-m-building-leadengine-ai) · [Cold to Gold AI](https://cold.leadengine.ai/c2gai) · [Hook, Line, & Sinker — LinkedIn](https://www.linkedin.com/posts/pspielmann_how-to-write-a-cold-email-banger-to-land-activity-7220097016658284545-_4zV) · [Full-circle multichannel — LinkedIn](https://www.linkedin.com/posts/pspielmann_i-spent-5-years-watching-the-industry-abandon-activity-7429178923902689280-T2Et) · [Clay + LeadMagic guide](https://leadmagic.io/guides/complete-guide-to-clay) · [LeadMagic integrations](https://leadmagic.io/docs/v1/integrations) · ▶ [Cold to Gold overview — YouTube](https://www.youtube.com/watch?v=tf88GFLtj18)
 
-**Canonical expert entry:** `references/experts.md` → Pat Spielmann
+**Canonical expert entry:** [experts.md](https://github.com/LeadMagic/gtm-skills/blob/main/references/experts.md) → Pat Spielmann
 
 **Identity:** Head of GTM at **LeadMagic** (B2B data enrichment — email, mobile, company signals via API, CLI, MCP, Clay). Former founder **LeadEngine.ai**, **Uptics**, and outbound agency **Lead Engine**. Operator across enrichment waterfalls, AI-assisted copy, and multichannel outbound.
 
